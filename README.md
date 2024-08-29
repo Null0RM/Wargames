@@ -28,7 +28,7 @@
 | [22. Dex](https://ethernaut.openzeppelin.com/level/0xB468f8e42AC0fAe675B56bc6FDa9C0563B61A52F) | ✅ |
 | [23. Dex Two](https://ethernaut.openzeppelin.com/level/0xf59112032D54862E199626F55cFad4F8a3b0Fce9) | ✅ |
 | [24. Puzzle Wallet](https://ethernaut.openzeppelin.com/level/0x725595BA16E76ED1F6cC1e1b65A88365cC494824) | ✅ |
-| [25. Motorbike](https://ethernaut.openzeppelin.com/level/0x3A78EE8462BD2e31133de2B8f1f9CBD973D6eDd6) | ✅ |
+| [25. Motorbike](https://ethernaut.openzeppelin.com/level/0x3A78EE8462BD2e31133de2B8f1f9CBD973D6eDd6) | ❎ |
 | [26. DoubleEntryPoint](https://ethernaut.openzeppelin.com/level/0x34bD06F195756635a10A7018568E033bC15F3FB5) | ✅ |
 | [27. Good Samaritan](https://ethernaut.openzeppelin.com/level/0x36E92B2751F260D6a4749d7CA58247E7f8198284) | ✅ |
 | [28. Gatekeeper Three](https://ethernaut.openzeppelin.com/level/0x653239b3b3E67BC0ec1Df7835DA2d38761FfD882) | ✅ |
