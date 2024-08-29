@@ -1,0 +1,1 @@
+// cast send $instance --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY "approve(address to, uint256 tokenId)" $instance 0

@@ -1,0 +1,1 @@
+cast send 0xf13B5B32f17de9056e923A9f48A7AAd1f069402F --rpc-url $SEPOLIA_RPC_URL --private-key $UPSIDE_SK "destroy(address _to)" 0xE9c6Bb1b3dA49415A788D005b9a4fef9f5f19eA3 
