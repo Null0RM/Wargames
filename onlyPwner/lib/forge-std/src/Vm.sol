@@ -243,6 +243,97 @@ interface VmSafe {
         uint64 gasRemaining;
     }
 
+    // ======== Crypto ========
+
+    /// Derives a private key from the name, labels the account with that name, and returns the wallet.
+    function createWallet(string calldata walletLabel) external returns (Wallet memory wallet);
+
+    /// Generates a wallet from the private key and returns the wallet.
+    function createWallet(uint256 privateKey) external returns (Wallet memory wallet);
+
+    /// Generates a wallet from the private key, labels the account with that name, and returns the wallet.
+    function createWallet(uint256 privateKey, string calldata walletLabel) external returns (Wallet memory wallet);
+
+    /// Derive a private key from a provided mnenomic string (or mnenomic file path)
+    /// at the derivation path `m/44'/60'/0'/0/{index}`.
+    function deriveKey(string calldata mnemonic, uint32 index) external pure returns (uint256 privateKey);
+
+    /// Derive a private key from a provided mnenomic string (or mnenomic file path)
+    /// at `{derivationPath}{index}`.
+    function deriveKey(string calldata mnemonic, string calldata derivationPath, uint32 index)
+        external
+        pure
+        returns (uint256 privateKey);
+
+    /// Derive a private key from a provided mnenomic string (or mnenomic file path) in the specified language
+    /// at the derivation path `m/44'/60'/0'/0/{index}`.
+    function deriveKey(string calldata mnemonic, uint32 index, string calldata language)
+        external
+        pure
+        returns (uint256 privateKey);
+
+    /// Derive a private key from a provided mnenomic string (or mnenomic file path) in the specified language
+    /// at `{derivationPath}{index}`.
+    function deriveKey(string calldata mnemonic, string calldata derivationPath, uint32 index, string calldata language)
+        external
+        pure
+        returns (uint256 privateKey);
+
+    /// Derives secp256r1 public key from the provided `privateKey`.
+    function publicKeyP256(uint256 privateKey) external pure returns (uint256 publicKeyX, uint256 publicKeyY);
+
+    /// Adds a private key to the local forge wallet and returns the address.
+    function rememberKey(uint256 privateKey) external returns (address keyAddr);
+
+    /// Signs data with a `Wallet`.
+    /// Returns a compact signature (`r`, `vs`) as per EIP-2098, where `vs` encodes both the
+    /// signature's `s` value, and the recovery id `v` in a single bytes32.
+    /// This format reduces the signature size from 65 to 64 bytes.
+    function signCompact(Wallet calldata wallet, bytes32 digest) external returns (bytes32 r, bytes32 vs);
+
+    /// Signs `digest` with `privateKey` using the secp256k1 curve.
+    /// Returns a compact signature (`r`, `vs`) as per EIP-2098, where `vs` encodes both the
+    /// signature's `s` value, and the recovery id `v` in a single bytes32.
+    /// This format reduces the signature size from 65 to 64 bytes.
+    function signCompact(uint256 privateKey, bytes32 digest) external pure returns (bytes32 r, bytes32 vs);
+
+    /// Signs `digest` with signer provided to script using the secp256k1 curve.
+    /// Returns a compact signature (`r`, `vs`) as per EIP-2098, where `vs` encodes both the
+    /// signature's `s` value, and the recovery id `v` in a single bytes32.
+    /// This format reduces the signature size from 65 to 64 bytes.
+    /// If `--sender` is provided, the signer with provided address is used, otherwise,
+    /// if exactly one signer is provided to the script, that signer is used.
+    /// Raises error if signer passed through `--sender` does not match any unlocked signers or
+    /// if `--sender` is not provided and not exactly one signer is passed to the script.
+    function signCompact(bytes32 digest) external pure returns (bytes32 r, bytes32 vs);
+
+    /// Signs `digest` with signer provided to script using the secp256k1 curve.
+    /// Returns a compact signature (`r`, `vs`) as per EIP-2098, where `vs` encodes both the
+    /// signature's `s` value, and the recovery id `v` in a single bytes32.
+    /// This format reduces the signature size from 65 to 64 bytes.
+    /// Raises error if none of the signers passed into the script have provided address.
+    function signCompact(address signer, bytes32 digest) external pure returns (bytes32 r, bytes32 vs);
+
+    /// Signs `digest` with `privateKey` using the secp256r1 curve.
+    function signP256(uint256 privateKey, bytes32 digest) external pure returns (bytes32 r, bytes32 s);
+
+    /// Signs data with a `Wallet`.
+    function sign(Wallet calldata wallet, bytes32 digest) external returns (uint8 v, bytes32 r, bytes32 s);
+
+    /// Signs `digest` with `privateKey` using the secp256k1 curve.
+    function sign(uint256 privateKey, bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
+
+    /// Signs `digest` with signer provided to script using the secp256k1 curve.
+    /// If `--sender` is provided, the signer with provided address is used, otherwise,
+    /// if exactly one signer is provided to the script, that signer is used.
+    /// Raises error if signer passed through `--sender` does not match any unlocked signers or
+    /// if `--sender` is not provided and not exactly one signer is passed to the script.
+    function sign(bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
+
+    /// Signs `digest` with signer provided to script using the secp256k1 curve.
+    /// Raises error if none of the signers passed into the script have provided address.
+    function sign(address signer, bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
+
     // ======== Environment ========
 
     /// Gets the environment variable `name` and parses it as `address`.
@@ -447,6 +538,9 @@ interface VmSafe {
     /// Gets the nonce of an account.
     function getNonce(address account) external view returns (uint64 nonce);
 
+    /// Get the nonce of a `Wallet`.
+    function getNonce(Wallet calldata wallet) external returns (uint64 nonce);
+
     /// Gets all the recorded logs.
     function getRecordedLogs() external returns (Log[] memory logs);
 
@@ -471,22 +565,10 @@ interface VmSafe {
     /// Performs an Ethereum JSON-RPC request to the current fork URL.
     function rpc(string calldata method, string calldata params) external returns (bytes memory data);
 
-    /// Signs `digest` with `privateKey` using the secp256r1 curve.
-    function signP256(uint256 privateKey, bytes32 digest) external pure returns (bytes32 r, bytes32 s);
-
-    /// Signs `digest` with `privateKey` using the secp256k1 curve.
-    function sign(uint256 privateKey, bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
-
-    /// Signs `digest` with signer provided to script using the secp256k1 curve.
-    /// If `--sender` is provided, the signer with provided address is used, otherwise,
-    /// if exactly one signer is provided to the script, that signer is used.
-    /// Raises error if signer passed through `--sender` does not match any unlocked signers or
-    /// if `--sender` is not provided and not exactly one signer is passed to the script.
-    function sign(bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
-
-    /// Signs `digest` with signer provided to script using the secp256k1 curve.
-    /// Raises error if none of the signers passed into the script have provided address.
-    function sign(address signer, bytes32 digest) external pure returns (uint8 v, bytes32 r, bytes32 s);
+    /// Performs an Ethereum JSON-RPC request to the given endpoint.
+    function rpc(string calldata urlOrAlias, string calldata method, string calldata params)
+        external
+        returns (bytes memory data);
 
     /// Starts recording all map SSTOREs for later retrieval.
     function startMappingRecording() external;
@@ -519,6 +601,17 @@ interface VmSafe {
     /// - `path` already exists and `recursive` is false.
     /// `path` is relative to the project root.
     function createDir(string calldata path, bool recursive) external;
+
+    /// Deploys a contract from an artifact file. Takes in the relative path to the json file or the path to the
+    /// artifact in the form of <path>:<contract>:<version> where <contract> and <version> parts are optional.
+    function deployCode(string calldata artifactPath) external returns (address deployedAddress);
+
+    /// Deploys a contract from an artifact file. Takes in the relative path to the json file or the path to the
+    /// artifact in the form of <path>:<contract>:<version> where <contract> and <version> parts are optional.
+    /// Additionaly accepts abi-encoded constructor arguments.
+    function deployCode(string calldata artifactPath, bytes calldata constructorArgs)
+        external
+        returns (address deployedAddress);
 
     /// Returns true if the given path points to an existing entity, else returns false.
     function exists(string calldata path) external returns (bool result);
@@ -679,6 +772,24 @@ interface VmSafe {
     /// Parses a string of JSON data at `key` and coerces it to `string[]`.
     function parseJsonStringArray(string calldata json, string calldata key) external pure returns (string[] memory);
 
+    /// Parses a string of JSON data at `key` and coerces it to type array corresponding to `typeDescription`.
+    function parseJsonTypeArray(string calldata json, string calldata key, string calldata typeDescription)
+        external
+        pure
+        returns (bytes memory);
+
+    /// Parses a string of JSON data and coerces it to type corresponding to `typeDescription`.
+    function parseJsonType(string calldata json, string calldata typeDescription)
+        external
+        pure
+        returns (bytes memory);
+
+    /// Parses a string of JSON data at `key` and coerces it to type corresponding to `typeDescription`.
+    function parseJsonType(string calldata json, string calldata key, string calldata typeDescription)
+        external
+        pure
+        returns (bytes memory);
+
     /// Parses a string of JSON data at `key` and coerces it to `uint256`.
     function parseJsonUint(string calldata json, string calldata key) external pure returns (uint256);
 
@@ -746,6 +857,20 @@ interface VmSafe {
     function serializeJson(string calldata objectKey, string calldata value) external returns (string memory json);
 
     /// See `serializeJson`.
+    function serializeJsonType(string calldata typeDescription, bytes calldata value)
+        external
+        pure
+        returns (string memory json);
+
+    /// See `serializeJson`.
+    function serializeJsonType(
+        string calldata objectKey,
+        string calldata valueKey,
+        string calldata typeDescription,
+        bytes calldata value
+    ) external returns (string memory json);
+
+    /// See `serializeJson`.
     function serializeString(string calldata objectKey, string calldata valueKey, string calldata value)
         external
         returns (string memory json);
@@ -778,6 +903,9 @@ interface VmSafe {
     function writeJson(string calldata json, string calldata path, string calldata valueKey) external;
 
     // ======== Scripting ========
+
+    /// Takes a signed transaction and broadcasts it to the network.
+    function broadcastRawTransaction(bytes calldata data) external;
 
     /// Has the next call (at this call depth only) create transactions that can later be signed and sent onchain.
     /// Broadcasting address is determined by checking the following in order:
@@ -1312,6 +1440,14 @@ interface VmSafe {
     /// Writes a conditional breakpoint to jump to in the debugger.
     function breakpoint(string calldata char, bool value) external;
 
+    /// Returns the Foundry version.
+    /// Format: <cargo_version>+<git_sha>+<build_timestamp>
+    /// Sample output: 0.2.0+faa94c384+202407110019
+    /// Note: Build timestamps may vary slightly across platforms due to separate CI jobs.
+    /// For reliable version comparisons, use YYYYMMDD0000 format (e.g., >= 202407110000)
+    /// to compare timestamps while ignoring minor time differences.
+    function getFoundryVersion() external view returns (string memory version);
+
     /// Returns the RPC url for the given alias.
     function rpcUrl(string calldata rpcAlias) external view returns (string memory json);
 
@@ -1407,51 +1543,18 @@ interface VmSafe {
     /// Compute the address a contract will be deployed at for a given deployer address and nonce.
     function computeCreateAddress(address deployer, uint256 nonce) external pure returns (address);
 
-    /// Derives a private key from the name, labels the account with that name, and returns the wallet.
-    function createWallet(string calldata walletLabel) external returns (Wallet memory wallet);
-
-    /// Generates a wallet from the private key and returns the wallet.
-    function createWallet(uint256 privateKey) external returns (Wallet memory wallet);
-
-    /// Generates a wallet from the private key, labels the account with that name, and returns the wallet.
-    function createWallet(uint256 privateKey, string calldata walletLabel) external returns (Wallet memory wallet);
-
-    /// Derive a private key from a provided mnenomic string (or mnenomic file path)
-    /// at the derivation path `m/44'/60'/0'/0/{index}`.
-    function deriveKey(string calldata mnemonic, uint32 index) external pure returns (uint256 privateKey);
-
-    /// Derive a private key from a provided mnenomic string (or mnenomic file path)
-    /// at `{derivationPath}{index}`.
-    function deriveKey(string calldata mnemonic, string calldata derivationPath, uint32 index)
-        external
-        pure
-        returns (uint256 privateKey);
-
-    /// Derive a private key from a provided mnenomic string (or mnenomic file path) in the specified language
-    /// at the derivation path `m/44'/60'/0'/0/{index}`.
-    function deriveKey(string calldata mnemonic, uint32 index, string calldata language)
-        external
-        pure
-        returns (uint256 privateKey);
-
-    /// Derive a private key from a provided mnenomic string (or mnenomic file path) in the specified language
-    /// at `{derivationPath}{index}`.
-    function deriveKey(string calldata mnemonic, string calldata derivationPath, uint32 index, string calldata language)
-        external
-        pure
-        returns (uint256 privateKey);
-
     /// Returns ENS namehash for provided string.
     function ensNamehash(string calldata name) external pure returns (bytes32);
 
     /// Gets the label for the specified address.
     function getLabel(address account) external view returns (string memory currentLabel);
 
-    /// Get a `Wallet`'s nonce.
-    function getNonce(Wallet calldata wallet) external returns (uint64 nonce);
-
     /// Labels an address in call traces.
     function label(address account, string calldata newLabel) external;
+
+    /// Pauses collection of call traces. Useful in cases when you want to skip tracing of
+    /// complex calls which are not useful for debugging.
+    function pauseTracing() external view;
 
     /// Returns a random `address`.
     function randomAddress() external returns (address);
@@ -1462,11 +1565,8 @@ interface VmSafe {
     /// Returns random uin256 value between the provided range (=min..=max).
     function randomUint(uint256 min, uint256 max) external returns (uint256);
 
-    /// Adds a private key to the local forge wallet and returns the address.
-    function rememberKey(uint256 privateKey) external returns (address keyAddr);
-
-    /// Signs data with a `Wallet`.
-    function sign(Wallet calldata wallet, bytes32 digest) external returns (uint8 v, bytes32 r, bytes32 s);
+    /// Unpauses collection of call traces.
+    function resumeTracing() external view;
 
     /// Encodes a `bytes` value to a base64url string.
     function toBase64URL(bytes calldata data) external pure returns (string memory);
@@ -1657,6 +1757,10 @@ interface Vm is VmSafe {
     /// Takes a fork identifier created by `createFork` and sets the corresponding forked state as active.
     function selectFork(uint256 forkId) external;
 
+    /// Set blockhash for the current block.
+    /// It only sets the blockhash for blocks where `block.number - 256 <= number < block.number`.
+    function setBlockhash(uint256 blockNumber, bytes32 blockHash) external;
+
     /// Sets the nonce of an account. Must be higher than the current nonce of the account.
     function setNonce(address account, uint64 newNonce) external;
 
@@ -1719,6 +1823,30 @@ interface Vm is VmSafe {
 
     /// Expects given number of calls to an address with the specified `msg.value`, gas, and calldata.
     function expectCall(address callee, uint256 msgValue, uint64 gas, bytes calldata data, uint64 count) external;
+
+    /// Prepare an expected anonymous log with (bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData.).
+    /// Call this function, then emit an anonymous event, then call a function. Internally after the call, we check if
+    /// logs were emitted in the expected order with the expected topics and data (as specified by the booleans).
+    function expectEmitAnonymous(bool checkTopic0, bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData)
+        external;
+
+    /// Same as the previous method, but also checks supplied address against emitting contract.
+    function expectEmitAnonymous(
+        bool checkTopic0,
+        bool checkTopic1,
+        bool checkTopic2,
+        bool checkTopic3,
+        bool checkData,
+        address emitter
+    ) external;
+
+    /// Prepare an expected anonymous log with all topic and data checks enabled.
+    /// Call this function, then emit an anonymous event, then call a function. Internally after the call, we check if
+    /// logs were emitted in the expected order with the expected topics and data.
+    function expectEmitAnonymous() external;
+
+    /// Same as the previous method, but also checks supplied address against emitting contract.
+    function expectEmitAnonymous(address emitter) external;
 
     /// Prepare an expected log with (bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData.).
     /// Call this function, then emit an event, then call a function. Internally after the call, we check if
